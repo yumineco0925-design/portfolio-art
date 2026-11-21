@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>一秒の検定所</title>
+<meta name="description" content="夜間の窓口で、持ち込まれた一秒を化学天秤で検定する。">
+<meta name="theme-color" content="#0b0f0e">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Noto+Sans+JP:wght@500;700&family=Noto+Serif+JP:wght@700;900&display=swap">
+<style>
+  :root {
+    --bg: #0b0f0e;
+    --ink: #e6e0cf;
+    --ink-2: #a9a491;
+    --ink-3: #77735f;
+    --rule: #2b302d;
+    --accent: #2D765D;
+    --accent-lit: #3f9a79;
+    --metal: #8c8a7e;
+    --metal-hi: #c9c6b8;
+    --face: #171b19;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); }
+  body {
+    font-family: "Noto Sans JP", sans-serif; font-weight: 500;
+    overflow: hidden; -webkit-text-size-adjust: 100%;
+  }
+  #view { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; }
+  #view.dragging { cursor: grabbing; }
+  .desk {
+    position: fixed; inset: 0; pointer-events: none;
+    display: flex; flex-direction: column; justify-content: center;
+    width: min(38vw, 560px); min-width: 340px;
+    padding: 48px 40px 48px 56px;
+  }
+  .desk > * { pointer-events: auto; }
+  .kicker { margin: 0 0 14px; font-size: 13px; letter-spacing: 0.16em; color: var(--ink-2); }
+  h1 { margin: 0 0 22px; font-family: "Noto Serif JP", serif; font-weight: 900; font-size: 46px; letter-spacing: 0.06em; line-height: 1.15; }
+  .lead { margin: 0 0 22px; font-size: 15px; line-height: 1.85; color: var(--ink); max-width: 30em; text-wrap: pretty; }
+  .lead .ph { display: inline-block; }
+  .tol { margin: 0 0 26px; font-family: "IBM Plex Mono", "Noto Sans JP", monospace; font-size: 14px; color: var(--ink-2); letter-spacing: 0.02em; }
+  .tol b { font-weight: 600; color: var(--ink); }
+
+  .hold {
+    position: relative; display: flex; align-items: center; justify-content: space-between;
+    width: 288px; height: 72px; padding: 0 9px 0 22px;
+    border-radius: 15px; border: 3px solid var(--metal);
+    background: linear-gradient(#1d2220, #141816);
+    box-shadow: 0 7px 0 #050706, inset 0 1px 0 rgba(255,255,255,0.06);
+    color: var(--ink); font: 700 19px/1 "Noto Sans JP", sans-serif; letter-spacing: 0.08em;
+    cursor: pointer; transform: translateY(0); transition: transform 40ms linear, box-shadow 40ms linear;
+  }
+  .hold:focus-visible { outline: 2px solid var(--metal-hi); outline-offset: 5px; }
+  .hold .win {
+    width: 53px; height: 53px; border-radius: 6px; flex: none;
+    display: flex; align-items: center; justify-content: center;
+    border: 2px solid #5f5d54; background: #0c100e;
+    box-shadow: inset 0 2px 6px rgba(0,0,0,0.8);
+    font: 700 12px/1 "Noto Sans JP", sans-serif; letter-spacing: 0.06em; color: var(--ink-3);
+  }
+  .hold[data-state="holding"], .hold[data-state="waiting-second"] { transform: translateY(7px); box-shadow: 0 0 0 #050706, inset 0 1px 0 rgba(255,255,255,0.04); }
+  .hold[data-state="holding"] .win { background: var(--accent-lit); border-color: #6e8f80; box-shadow: inset 0 0 10px rgba(0,0,0,0.25); color: #0c100e; }
+  .hold[data-state="waiting-second"] .win { background: var(--accent); border-color: #5c7a6c; color: #0c100e; }
+
+  .sub { display: flex; align-items: center; gap: 18px; margin: 22px 0 0; font-size: 13px; color: var(--ink-2); }
+  .mode {
+    font: 500 13px "Noto Sans JP", sans-serif; color: var(--ink-2);
+    background: none; border: 1px solid var(--rule); border-radius: 4px; padding: 6px 10px; cursor: pointer;
+  }
+  .mode[aria-pressed="true"] { color: var(--ink); border-color: var(--accent); }
+  .mode:focus-visible { outline: 2px solid var(--metal-hi); outline-offset: 3px; }
+  .result {
+    margin: 26px 0 0; min-height: 3.2em; line-height: 1.6;
+    font-family: "IBM Plex Mono", "Noto Sans JP", monospace; font-size: 17px; font-weight: 600; letter-spacing: 0.01em;
+    color: var(--ink); white-space: nowrap;
+  }
+  .result.idle { color: var(--ink-3); font-weight: 400; }
+  .result .row { display: block; }
+  .result .row + .row { color: var(--ink-2); }
+  .result .seg { white-space: nowrap; }
+  .nogl { display: none; margin: 18px 0 0; font-size: 13px; color: var(--ink-2); line-height: 1.7; }
+  .no-webgl #view { display: none; }
+  .no-webgl .nogl { display: block; }
+
+  @media (max-aspect-ratio: 1/1), (max-width: 760px) {
+    .desk { width: 100%; min-width: 0; padding: 0; display: block; }
+    .top { position: fixed; left: 0; right: 0; top: 0; padding: max(22px, env(safe-area-inset-top)) 20px 0; pointer-events: none; }
+    .bottom { position: fixed; left: 0; right: 0; bottom: 0; padding: 0 20px max(22px, env(safe-area-inset-bottom)); }
+    .kicker { margin-bottom: 8px; font-size: 12px; }
+    h1 { font-size: 32px; margin-bottom: 0; }
+    .lead { font-size: 14px; line-height: 1.75; margin-bottom: 12px; }
+    .tol { font-size: 13px; margin-bottom: 16px; }
+    .hold { width: 100%; max-width: 352px; height: 76px; }
+    .sub { margin-top: 18px; }
+    .result { margin-top: 16px; font-size: 15px; white-space: normal; }
+  }
+  @media (hover: none) and (pointer: coarse) {
+    .keyhint { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .hold { transition: none; }
+  }
+</style>
+</head>
+<body>
+<canvas id="view" aria-hidden="true"></canvas>
+<main class="desk">
+  <div class="top">
+    <p class="kicker">夜間受付　第1窓口</p>
+    <h1>一秒の検定所</h1>
+  </div>
+  <div class="bottom">
+    <p class="lead"><span class="ph">一秒だと思う長さだけ押して、</span><span class="ph">離してください。</span><span class="ph">押していた長さを測り、</span><span class="ph">不確かさを付けて</span><span class="ph">本日の公差と比べます。</span></p>
+    <p class="tol" id="tol">本日の公差　<b>1.000 s ± 0.050 s</b>（三級）</p>
+    <button class="hold" id="hold" type="button" data-state="idle" autofocus><span>一秒を持ち込む</span><span class="win" aria-hidden="true">計時</span></button>
+    <div class="sub">
+      <span class="keyhint">スペースキーでも押せます</span>
+      <button class="mode" id="mode" type="button" aria-pressed="false">2回押しで測る</button>
+    </div>
+    <p class="result idle" id="result" aria-live="polite">まだ持ち込まれていません</p>
+    <p class="nogl">この端末では天秤を描けません。手続きと判定はこのまま使えます。</p>
+  </div>
+</main>
+<script type="module" src="./main.js"></script>
+</body>
+</html>
