@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>きのう、日本が読んだもの。</title>
+<meta name="description" content="日本語版 Wikipedia でその日に読まれた記事の上位200を、多い順に1本のレシートにしました。">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#F0442E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23F0442E'/%3E%3Crect x='4' y='5' width='24' height='4' rx='2' fill='%23141414'/%3E%3Cpath d='M8 7h16v18l-2 2-2-2-2 2-2-2-2 2-2-2-2 2-2-2z' fill='%23FBFAF6'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;900&amp;family=M+PLUS+1+Code:wght@500;700&amp;family=Roboto+Mono:wght@500&amp;display=swap">
+<link rel="stylesheet" href="style.css">
+<script type="module" src="app.js"></script>
+</head>
+<body>
+<header class="intro" id="intro">
+  <p class="year" id="year" hidden></p>
+  <h1 id="title"><span id="t1">きのう、</span><span>日本が</span><span>読んだもの。</span></h1>
+  <div class="ctl" id="ctl">
+    <form class="pick" id="pick" autocomplete="off" novalidate>
+      <label class="pk-label" for="dy">日付</label>
+      <span class="pk-f"><input class="pk-in pk-y" id="dy" inputmode="numeric" maxlength="4" aria-label="年"><span class="pk-u">年</span></span>
+      <span class="pk-f"><input class="pk-in pk-m" id="dm" inputmode="numeric" maxlength="2" aria-label="月"><span class="pk-u">月</span></span>
+      <span class="pk-f"><input class="pk-in pk-d" id="dd" inputmode="numeric" maxlength="2" aria-label="日"><span class="pk-u">日</span></span>
+      <button class="pk-go" type="submit">刷る</button>
+    </form>
+    <div class="nav" id="nav">
+      <button type="button" id="nv-prev">◀ 前の日</button>
+      <button type="button" id="nv-next">次の日 ▶</button>
+      <button type="button" id="nv-copy">リンクを写す</button>
+      <button type="button" id="nv-back" hidden>きのうに戻る</button>
+      <span class="nv-msg" id="nv-msg" role="status" hidden></span>
+    </div>
+    <p class="lead" id="lead"></p>
+  </div>
+  <p class="src">出典は Wikimedia の公開データ（日本語版 Wikipedia の閲覧数の上位と、記事のカテゴリ）。日付は世界標準時（日本時間の朝9時から翌朝9時）。成人向けと事件の記事は外しています。</p>
+</header>
+
+<aside class="meter" id="meter" aria-live="polite">
+  <p class="m-label">合計</p>
+  <p class="m-total" id="total"><span class="m-num" id="total-num"></span><span class="m-unit">回</span></p>
+  <p class="m-note" id="m-note">この日の上位200が読まれた回数</p>
+  <div class="ruler" id="ruler" hidden>
+    <span class="r-line" aria-hidden="true"></span>
+    <span class="r-year" id="r-year" hidden></span>
+    <ol class="r-ticks" id="ticks"></ol>
+    <div class="r-mark" id="mark" aria-hidden="true"><span class="r-bar"></span><span class="r-now" id="now"></span></div>
+  </div>
+</aside>
+
+<section class="groups" id="groups" aria-label="まとめて増えたもの" hidden>
+  <p class="gs-head"></p>
+  <div class="gs-list"></div>
+  <p class="gs-note"></p>
+</section>
+
+<main id="main">
+  <div class="mask" aria-hidden="true"></div>
+  <div class="mouth" aria-hidden="true"></div>
+  <div class="track" id="track">
+    <div class="sheet" id="sheet">
+      <div class="paper head" id="head">
+        <p class="p-date" id="h-date">&nbsp;</p>
+        <p class="p-sub" id="h-sub">日本語版 Wikipedia　読まれた記事 上位200</p>
+        <hr class="rule">
+        <div class="p-search">
+          <label for="q">さがす：</label>
+          <div class="field"><input id="q" type="search" placeholder="気になる言葉" autocomplete="off" spellcheck="false" enterkeyhint="search"></div>
+        </div>
+        <div class="tabs" role="group" aria-label="並べ方">
+          <button class="tab" type="button" data-m="new" aria-pressed="false">前の日は圏外</button>
+          <button class="tab" type="button" data-m="up" aria-pressed="false">増えた順</button>
+          <button class="tab" type="button" data-m="down" aria-pressed="false">減った順</button>
+          <button class="tab" type="button" data-m="views" aria-pressed="true">読まれた順</button>
+        </div>
+        <div class="colhead" aria-hidden="true"><span class="c-rank">順位</span><span>記事</span><span>8日間</span><span class="c-v">回数</span><span class="c-d">前の日から</span></div>
+        <p class="colnote">新＝前の日は上位1000の外</p>
+        <hr class="rule rule-last">
+      </div>
+      <div class="body" id="body"></div>
+    </div>
+  </div>
+</main>
+</body>
+</html>
